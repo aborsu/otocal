@@ -10,6 +10,14 @@ IGNORER = {"Personnel"}
 JOURS = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"]
 
 
+def court(titre):
+    # Raccourcit les anniversaires pour mieux voir le prénom
+    for long in ("Anniversaire de ", "Anniversaire d'", "Anniversaire "):
+        if titre.startswith(long):
+            return "Anniv. " + titre[len(long):]
+    return titre
+
+
 def charger_evenements(nb_jours=28):
     cfg = dotenv_values(Path("/home/otocal/.config/otocal/nextcloud.env"))
     client = caldav.DAVClient(url=cfg["NC_URL"], username=cfg["NC_USER"], password=cfg["NC_PASS"])
@@ -47,7 +55,7 @@ def charger_evenements(nb_jours=28):
             evenements.append({
                 "jour": dt.date() if isinstance(dt, datetime) else dt,
                 "heure": heure,
-                "texte": f"{ini} · {titre}" if ini else titre,
+                "texte": f"{ini} · {court(titre)}" if ini else court(titre),
                 # Correction 2 : tout ce qui commence par "Anniversaire" est rouge
                 "rouge": cal.name == "Anniversaires des contacts" or titre.startswith("Anniversaire"),
                 "conge": cal.name == "Famille" and duree > 1,
