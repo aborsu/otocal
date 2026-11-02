@@ -1,0 +1,12 @@
+[Unit]
+Description=Calendrier e-ink otocal
+After=network-online.target pisugar-server.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/otocal/otocal
+ExecStart=/usr/bin/python3 /home/otocal/otocal/cycle.py
+
+[Install]
+WantedBy=multi-user.target
