@@ -21,7 +21,7 @@ def court(titre):
 def charger_evenements(nb_jours=28):
     cfg = dotenv_values(Path("/home/otocal/.config/otocal/nextcloud.env"))
     client = caldav.DAVClient(url=cfg["NC_URL"], username=cfg["NC_USER"], password=cfg["NC_PASS"])
-    debut = datetime.combine(date.today(), time(0), TZ)
+    debut = datetime.combine(date.today() - timedelta(days=date.today().weekday()), time(0), TZ)
     fin = debut + timedelta(days=nb_jours)
 
     evenements = []

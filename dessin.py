@@ -22,8 +22,48 @@ def police_grille(taille=16):
     return ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf", taille)
 
 
+GLYPHES = None
+INVISIBLES = {0x200D, 0xFE0E, 0xFE0F} | set(range(0x1F3FB, 0x1F400)) | set(range(0xE0020, 0xE0080))
+
+
+# Liste blanche : emoji en couleur -> symbole noir et blanc que l'écran sait dessiner
+ALIAS_EMOJI = {
+    "⭐": "★", "🌟": "★",
+    "❤": "♥", "💙": "♥", "💚": "♥",
+    "🌞": "☀",
+    "🎵": "♪", "🎶": "♫",
+    "📞": "☎",
+    "📧": "✉",
+    "🛫": "✈",
+    "✅": "✓", "✔": "✓",
+    "❌": "✗",
+}
+
+
+def nettoyer(texte):
+    # Remplace les caractères absents des polices (emojis...) par ⚠ au lieu d'un "tofu"
+    global GLYPHES
+    if GLYPHES is None:
+        from fontTools.ttLib import TTFont
+        polices = [POLICE, GRAS, "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf"]
+        GLYPHES = set.intersection(*(set(TTFont(p).getBestCmap()) for p in polices))
+    for emoji, symbole in ALIAS_EMOJI.items():
+        texte = texte.replace(emoji, symbole)
+    remplacant = "⚠" if ord("⚠") in GLYPHES else "?"
+    resultat = ""
+    for c in texte:
+        if ord(c) in GLYPHES:
+            resultat += c
+        elif ord(c) in INVISIBLES:
+            continue  # morceaux invisibles d'un emoji (couleur de peau, liaisons...)
+        elif not resultat.endswith(remplacant):
+            resultat += remplacant  # un seul ⚠ par emoji
+    return " ".join(resultat.split())
+
+
 def couper(texte, n):
     # Raccourcit un texte trop long avec "…"
+    texte = nettoyer(texte)
     return texte if len(texte) <= n else texte[:n - 1] + "…"
 
 
