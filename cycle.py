@@ -53,14 +53,18 @@ try:
 except Exception as e:
     journal(f"Affichage raté : {e}")
 
-# 4. Prochaine alarme
+# 4. Prochaine alarme (on insiste : sans alarme, on ne se réveille jamais)
 alarme_ok = False
-try:
-    moment, reponse = regler_reveil()
-    journal(f"Prochain réveil : {moment} ({reponse})")
-    alarme_ok = "done" in reponse
-except Exception as e:
-    journal(f"Réveil non réglé : {e}")
+for tentative in range(30):
+    try:
+        moment, reponse = regler_reveil()
+        journal(f"Prochain réveil : {moment} ({reponse})")
+        alarme_ok = "done" in reponse
+    except Exception as e:
+        journal(f"Réveil non réglé : {e}")
+    if alarme_ok:
+        break
+    time.sleep(60)
 
 # 5. S'éteindre seulement si on est sûr de se réveiller
 try:

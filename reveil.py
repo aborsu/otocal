@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, time
 from zoneinfo import ZoneInfo
 from pisugar import commande
+import subprocess
+import time as chrono
 
 TZ = ZoneInfo("Europe/Brussels")
 HEURES_REVEIL = [time(6, 0), time(11, 30), time(18, 0)]
@@ -18,10 +20,25 @@ def prochain_reveil():
                 return moment
 
 
-def regler_reveil():
+def horloge_synchronisee():
+    r = subprocess.run(["timedatectl", "show", "-p", "NTPSynchronized", "--value"],
+                       capture_output=True, text=True)
+    return r.stdout.strip() == "yes"
+
+
+def regler_reveil(essais=10):
     moment = prochain_reveil()
-    commande("rtc_pi2rtc")  # remettre l'horloge à l'heure, par sécurité
-    reponse = commande(f"rtc_alarm_set {moment.isoformat()} 127")
+    if horloge_synchronisee():
+        commande("rtc_pi2rtc")  # seulement si heure du Pi fiable
+    reponse = ""
+    for essai in range(essais):
+        try:
+            reponse = commande(f"rtc_alarm_set {moment.isoformat()} 127")
+            if "done" in reponse:
+                break
+        except Exception as e:
+            reponse = f"erreur : {e}"
+        chrono.sleep(3)
     return moment, reponse
 
 
